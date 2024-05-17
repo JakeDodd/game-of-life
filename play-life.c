@@ -12,7 +12,7 @@
 
 /*** defines ***/
 
-#define CTRL_KEY(k) ((k) & 31)
+#define CTRL_KEY(k) ((k)&31)
 #define BUF_INIT                                                               \
   { NULL, 0 }
 
@@ -54,17 +54,13 @@ void freeBuff(struct buffer *buff) { free(buff->b); }
 
 /*** methods ***/
 
-char *itoa(int i, int *len) {
-  struct buffer buff = BUF_INIT;
-  *len = 0;
+void itoa(int i, struct buffer *buff) {
   while (i > 0) {
     char *str = malloc(sizeof(char));
     *str = (char)((i % 10) + 48);
-    prepend(&buff, str, 1);
+    prepend(buff, str, 1);
     i /= 10;
-    len++;
   }
-  return buff.b;
 }
 
 int getDisplaySize(int *rows, int *cols) {
@@ -115,6 +111,7 @@ void enableRawMode() {
 /*** output methods ***/
 
 void drawTildes(struct buffer *buff) {
+  /*
   append(buff, " ", 1);
   for (int i = 1; i < d.cols; i++) {
     int *len = malloc(sizeof(int));
@@ -131,6 +128,47 @@ void drawTildes(struct buffer *buff) {
       append(buff, "\r\n", 2);
     }
   }
+  */
+  char *new;
+  int len = (d.rows) * (d.cols + 2);
+  new = malloc(sizeof(char) * len);
+  for (int i = 1; i <= d.rows; i++) {
+    for (int j = 1; j <= d.cols; j++) {
+      if (i == 3 && j > 3) {
+        struct buffer num = BUF_INIT;
+        itoa(j - 3, &num);
+        char t = num.b[0];
+        if (num.len == 3) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[2];
+          new[(i - 2) * (d.cols + 2) + j - 1] = num.b[1];
+          new[(i - 3) * (d.cols + 2) + j - 1] = num.b[0];
+        } else if (num.len == 2) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[1];
+          new[(i - 2) * (d.cols + 2) + j - 1] = num.b[0];
+        } else if (num.len == 1) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[0];
+        }
+      } else if (j == 3 && i > 3) {
+        struct buffer num = BUF_INIT;
+        itoa(i - 3, &num);
+        if (num.len == 3) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[2];
+          new[(i - 1) * (d.cols + 2) + j - 2] = num.b[1];
+          new[(i - 1) * (d.cols + 2) + j - 3] = num.b[0];
+        } else if (num.len == 2) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[1];
+          new[(i - 1) * (d.cols + 2) + j - 2] = num.b[0];
+        } else if (num.len == 1) {
+          new[(i - 1) * (d.cols + 2) + j - 1] = num.b[0];
+        }
+      } else {
+        new[(i - 1) * (d.cols + 2) + j - 1] = ' ';
+      }
+    }
+    new[(i - 1) * (d.cols + 2) + d.cols] = '\r';
+    new[(i - 1) * (d.cols + 2) + d.cols + 1] = '\n';
+  }
+  append(buff, new, len);
 }
 
 void refreshDisplay() {
