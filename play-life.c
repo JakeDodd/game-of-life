@@ -48,6 +48,9 @@ void setStatusMessage(const char *fmt, ...);
 void refreshDisplay();
 int readKeyboardInput();
 char *promptUser(char *prompt);
+void runGenerations();
+void executeGeneration();
+void copyTemp();
 
 /*** members ***/
 
@@ -181,10 +184,10 @@ void appendRowTemp(char *s, size_t len) {
 
 void copyToTemp() {
   for (int i = 0; i < d.numRows; i++) {
-    if (i > d.tempnumRows) {
+    if (i >= d.tempnumRows) {
       appendRowTemp(d.row[i].chars, d.row[i].size);
     } else {
-      d.temprow[i].chars = realloc(d.temprow[i].chars, d.row[i].size);
+      d.temprow[i].chars = realloc(d.temprow[i].chars, d.row[i].size + 1);
       memcpy(d.temprow[i].chars, d.row[i].chars, d.row[i].size);
     }
   }
@@ -572,29 +575,148 @@ void processKeypress() {
     break;
   case 't':
     toggleCharAtCursor();
+    break;
+  case '\r':
+    runGenerations();
+    break;
   }
 }
 
 /*** game logic ***/
+
+void copyTemp() {
+  for (int i = 0; i < d.numRows; i++) {
+    memcpy(d.row[i].chars, d.temprow[i].chars, d.row[i].size);
+  }
+}
 
 void executeGeneration() {
   copyToTemp();
   for (int i = 0; i < d.numRows; i++) {
     for (int j = 0; j < d.cols; j++) {
       int liveNeighbors = 0;
-      if (i > 0) {
-        // check above
+      int alive = d.row[i].chars[j] == '#';
+      if (i == 0 && j == 0) {
+        // top left corner
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+      } else if (i == 0 && j == d.cols - 1) {
+        // top right corner
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+      } else if (i == d.numRows - 1 && j == 0) {
+        // bottom left corner
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+      } else if (i == d.numRows - 1 && j == d.cols - 1) {
+        // bottom right corner
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+      } else if (i == 0) {
+        // top row
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j - 1] == '#')
+          liveNeighbors++;
+      } else if (i == d.numRows - 1) {
+        // bottom row
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j - 1] == '#')
+          liveNeighbors++;
+      } else if (j == 0) {
+        // left column
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+      } else if (j == d.cols - 1) {
+        // right column
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+      } else {
+        // check all neighbors
+        if (d.row[i].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i + 1].chars[j - 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j + 1] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j] == '#')
+          liveNeighbors++;
+        if (d.row[i - 1].chars[j - 1] == '#')
+          liveNeighbors++;
       }
-      if (i < d.numRows) {
-        // check below
+      if (!alive && liveNeighbors == 3) {
+        d.temprow[i].chars[j] = '#';
       }
-      if (j > 0) {
-        // check left
-      }
-      if (j < d.cols) {
-        // check right
+      if (alive) {
+        if (liveNeighbors < 2)
+          d.temprow[i].chars[j] = ' ';
+        if (liveNeighbors > 1 && liveNeighbors < 4)
+          d.temprow[i].chars[j] = '#';
+        if (liveNeighbors > 3)
+          d.temprow[i].chars[j] = ' ';
       }
     }
+  }
+  copyTemp();
+}
+
+void runGenerations() {
+  int generations = 10;
+  while (generations--) {
+    executeGeneration();
+    refreshDisplay();
+    sleep(1);
   }
 }
 
