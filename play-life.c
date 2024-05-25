@@ -712,11 +712,13 @@ void executeGeneration() {
 }
 
 void runGenerations() {
-  int generations = 10;
+  int generations = 1000;
   while (generations--) {
     executeGeneration();
     refreshDisplay();
-    sleep(1);
+    // sleep(.3);
+    struct timespec remaining, request = {0, 200000000};
+    nanosleep(&request, &remaining);
   }
 }
 
