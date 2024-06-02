@@ -354,8 +354,11 @@ void drawStatusBar(struct buffer *b) {
   append(b, "\x1b[7m", 4);
   char status[80];
   char rightstatus[80];
-  int len = snprintf(status, sizeof(status), "%.20s - %d lines",
-                     d.filename ? d.filename : "[No File Open]", d.numRows);
+  int len =
+      snprintf(status, sizeof(status),
+               "%.20s - %d lines - columns: %d - rows: %d - x: %d - y: %d",
+               d.filename ? d.filename : "[No File Open]", d.numRows, d.cols,
+               d.rows, d.cx, d.cy);
   int rlen =
       snprintf(rightstatus, sizeof(rightstatus), "%d/%d", d.cy + 1, d.cx + 1);
   if (len > d.cols)
